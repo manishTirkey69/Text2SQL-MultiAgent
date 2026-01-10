@@ -1,0 +1,22 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install requirements
+COPY frontend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy frontend code
+COPY frontend/ ./frontend/
+
+# Expose Streamlit port
+EXPOSE 8501
+
+# Create .streamlit directory
+RUN mkdir -p /root/.streamlit
+
+# Copy config
+COPY frontend/.streamlit/config.toml /root/.streamlit/config.toml
+
+# Run Streamlit
+CMD ["streamlit", "run", "frontend/streamlit_app.py", "--server.address=0.0.0.0"]

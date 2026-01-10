@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: db_reasoning_postgres
+    environment:
+      POSTGRES_USER: dbuser
+      POSTGRES_PASSWORD: dbpass
+      POSTGRES_DB: testdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./examples/sample_schema.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dbuser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: db_reasoning_api
+    environment:
+      - LLM__API_KEY=${OPENAI_API_KEY}
+      - LLM__MODEL=gpt-4-turbo-preview
+      - DB__TYPE=postgresql
+      - DB__HOST=postgres
+      - DB__PORT=5432
+      - DB__DATABASE=testdb
+      - DB__USERNAME=dbuser
+      - DB__PASSWORD=dbpass
+      - SAFETY__ENFORCE_READONLY=true
+      - API__HOST=0.0.0.0
+      - API__PORT=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./data:/app/data
+    command: python main.py --api
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: db_reasoning_frontend
+    environment:
+      - API_URL=http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    command: streamlit run frontend/streamlit_app.py --server.address=0.0.0.0
+
+volumes:
+  postgres_data:
