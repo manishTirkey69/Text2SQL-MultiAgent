@@ -127,8 +127,10 @@ class DatabaseReasoningEngine:
         # Initialize SQL executor
         self.sql_executor = SQLExecutor(
             self.engine,
+            safety_validator=self.safety_validator, 
             timeout_seconds=self.settings.safety.timeout_seconds
         )
+
         
         # Initialize feedback loop orchestrator
         self.feedback_loop = FeedbackLoopOrchestrator(
