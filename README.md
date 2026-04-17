@@ -169,7 +169,3 @@ Query: suggest
 - **ranking**: TOP N queries
 - **comparison**: Group comparisons
 - **statistical**: Statistical analysis
-
-## License
-
-MIT License
